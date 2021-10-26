@@ -12,7 +12,14 @@ library(MASS)
 theme_set(theme_bw())
 color_scheme_set("green")
 set.seed(123456789)
-load(system.file("extdata", "vignette_objects.rda", package = "bayesPO"), verbose = TRUE)
+temp <- tempfile(fileext = ".rda")
+d <- download.file("https://drive.google.com/uc?id=1WoBmyVFj_PI3zGcxIaIvGbRZFUy8_NNU&export=download",
+  temp, mode = "wb", quiet = TRUE)
+# Try to use downloaded version. If not available, run the model
+if (!d) load(temp, verbose = TRUE) else {
+  warning("Data failed to download from drive. Please check internet connection and try again.")
+  knitr::knit_exit()
+}
 
 ## ----set_true_params----------------------------------------------------------
 beta <- c(-1, 2) # Intercept = -1. Only one covariate
@@ -99,9 +106,8 @@ summary(fit)
 summary(fit2)
 
 ## ----bayesplot, fig.width = 5, fig.width = 5, fig.align = 'center'------------
-theray <- as.array(fit2)
-mcmc_trace(theray)
+mcmc_trace(fit2)
 
 ## ----marginals, fig.width = 5, fig.width = 5, fig.align = 'center'------------
-mcmc_dens(theray)
+mcmc_dens(fit2)
 

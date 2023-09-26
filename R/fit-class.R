@@ -27,6 +27,7 @@ NULL
 #' @exportClass bayesPO_fit
 methods::setClass("bayesPO_fit",
                   representation(fit = "mcmc.list",
+                                 # heatMap = "numeric",
                                  original = "bayesPO_model",
                                  backgroundSummary = "table",
                                  area = "numeric",
@@ -45,48 +46,48 @@ methods::setMethod("show","bayesPO_fit",function(object){
 
   ## data
   cat("Presence-only dataset size:",nrow(methods::slot(methods::slot(object,"original"),"po")),"\n\n")
-  sc <- methods::slot(methods::slot(object,"original"),"iSelectedColumns")
+  sc <- methods::slot(methods::slot(object,"original"), "iSelectedColumns")
   if (length(sc))
-    cat(length(sc)," intensity covariates selected:\n",sc,"\n",sep = "")
+    cat(length(sc), " intensity covariates selected:\n", sc, "\n")
   else{
     sc <- methods::slot(methods::slot(object,"original"),"intensitySelection")
-    cat(length(sc)," intensity covariates selected. Columns: ",sc,"\n",sep = "")
+    cat(length(sc), " intensity covariates selected. Columns: ", sc, "\n")
   }
   sc <- methods::slot(methods::slot(object,"original"),"oSelectedColumns")
   if (length(sc))
-    cat(length(sc)," observability covariates selected:\n",sc,"\n",sep="")
+    cat(length(sc), " observability covariates selected:\n", sc, "\n")
   else{
     sc <- methods::slot(methods::slot(object,"original"),"observabilitySelection")
-    cat(length(sc)," observability covariates selected. Columns: ",sc,"\n",sep = "")
+    cat(length(sc), " observability covariates selected. Columns: ", sc, "\n")
   }
   cat("\n")
 
   ## Link function
-  links <- c(methods::slot(methods::slot(object,"original"),"intensityLink"),
-             methods::slot(methods::slot(object,"original"),"observabilityLink"))
-  names(links) <- c("intensity","observability")
+  links <- c(methods::slot(methods::slot(object,"original"), "intensityLink"),
+             methods::slot(methods::slot(object,"original"), "observabilityLink"))
+  names(links) <- c("intensity", "observability")
   cat("Link functions chosen:\n")
   print(links)
   cat("\n")
 
   ## Prior
   cat("Prior selection:\n")
-  methods::show(methods::slot(methods::slot(object,"original"),"prior"))
+  methods::show(methods::slot(methods::slot(object, "original"), "prior"))
   cat("\n")
 
   ## MCMC configuration
-  chains = length(methods::slot(methods::slot(object,"original"),"init"))
-  setup = methods::slot(object,"mcmc_setup")
-  cat(chains,ifelse(chains>1," chains"," chain")," of MCMC ",
-      ifelse(chains>1,"were","was")," configured with ",
-      format(setup$burnin, scientific = FALSE)," warmup ",
-      ifelse(setup$burnin>1,"iterations","iteration"),
-      " and ", format(setup$iter, scientific = FALSE)," valid ",
-      ifelse(setup$iter>1,"iterations","iteration"),", storing one in every ",
-      ifelse(setup$thin>1,paste(setup$thin,"steps"),"step"),".\n\n",sep="")
+  chains = length(methods::slot(methods::slot(object, "original"), "init"))
+  setup = methods::slot(object, "mcmc_setup")
+  cat(chains,ifelse(chains > 1," chains"," chain"), " of MCMC ",
+      ifelse(chains > 1,"were", "was"), " configured with ",
+      format(setup$burnin, scientific = FALSE), " warmup ",
+      ifelse(setup$burnin > 1, "iterations", "iteration"),
+      " and ", format(setup$iter, scientific = FALSE), " valid ",
+      ifelse(setup$iter>1, "iterations","iteration"), ", storing one in every ",
+      ifelse(setup$thin>1, paste(setup$thin, "steps"), "step"), ".\n\n", sep="")
 
   ## Results
-  print(round(summary(object),digits = 3))
+  print(round(summary(object), digits = 3))
   cat("\n")
 
   ## Comments
@@ -201,20 +202,22 @@ methods::setMethod("[[", "bayesPO_fit", function(x, i){
   } else
   if (i == "covariates_importance"){
     data <- as.data.frame(x)
+    names(data) <- namesAid(names(data))
+    obsInterceptName <- names(data)[nb + 1]
 
-    intensity <- t(apply(
-      data[2:(which(names(data) == "Observability_Intercept") - 1)], 1,
+    intensity <- as.matrix(apply(
+      data[2:(which(names(data) == obsInterceptName) - 1)], 1,
       function(chain) {c2 <- chain * chain; c2 / sum(c2)}
     ))
-    observability <- t(apply(
-      data[(which(names(data) == "Observability_Intercept") + 1):(which(names(data) == "lambdaStar") - 1)], 1,
+    observability <- as.matrix(apply(
+      data[(which(names(data) == obsInterceptName) + 1):(which(names(data) == "lambdaStar") - 1)], 1,
       function(chain) {c2 <- chain * chain; c2 / sum(c2)}
     ))
-    colnames(intensity) <- names(data)[2:(which(names(data) == "Observability_Intercept") - 1)]
-    colnames(observability) <- names(data)[(which(names(data) == "Observability_Intercept") + 1):(which(names(data) == "lambdaStar") - 1)]
+    colnames(intensity) <- names(data)[2:(which(names(data) == obsInterceptName) - 1)]
+    colnames(observability) <- names(data)[(which(names(data) == obsInterceptName) + 1):(which(names(data) == "lambdaStar") - 1)]
     output <- list(intensity = intensity, observability = observability)
     class(output) <- "covariates_importance"
-  }
+  } else
   if (i == "eff_sample_size"){
     summ <- summary(x)
     output <- summ[, 6]
@@ -265,7 +268,7 @@ namesAid <- function(string){
 
   # Find same covariates in both sets
   for (i in 1:(obsStart - 1))
-    searching <- grepl(string[i], string[obsStart:obsEnd])
+    searching <- string[i] == string[obsStart:obsEnd]
     if (any(searching)){
       new_string[i] <- paste0(string[i], ".int")
       new_string[obsStart - 1 + which(searching)] <- paste0(string[i], ".obs")

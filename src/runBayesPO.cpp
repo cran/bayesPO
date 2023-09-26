@@ -31,6 +31,7 @@ Rcpp::List runBayesPO(Eigen::VectorXd beta, Eigen::VectorXd delta,
         observabilityCovs.size());
   long i;
 
+
   auto t1 = std::chrono::high_resolution_clock::now(); // Timing variable
   auto t2 = std::chrono::high_resolution_clock::now(); // Timing variable
 
@@ -119,6 +120,7 @@ Rcpp::List runBayesPO(Eigen::VectorXd beta, Eigen::VectorXd delta,
                             Rcpp::Named("lambda") = outLambdas,
                             Rcpp::Named("nU") = out_nU,
                             Rcpp::Named("nXp") = out_nXp,
-                            Rcpp::Named("logPost") = outLogPost);
+                            Rcpp::Named("logPost") = outLogPost,
+                            Rcpp::Named("xPrimePred") =
+                              MarkovChain.background->getUnobservedCounts());
 }
-

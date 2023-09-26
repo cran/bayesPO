@@ -18,16 +18,19 @@ d <- download.file("https://drive.google.com/uc?id=1WoBmyVFj_PI3zGcxIaIvGbRZFUy8
 # Try to use downloaded version. If not available, run the model
 if (!d) load(temp, verbose = TRUE) else {
   warning("Data failed to download from drive. Please check internet connection and try again.")
-  knitr::knit_exit()
 }
 
 ## ----set_true_params----------------------------------------------------------
-beta <- c(-1, 2) # Intercept = -1. Only one covariate
+if (!d) {
+  beta <- c(-1, 2) # Intercept = -1. Only one covariate
 delta <- c(3, 4) # Intercept = 3. Only one covariate
 lambdaStar <- 1000
+} else warning("Data failed to download from drive. Please check internet connection and try again.")
+
 
 ## ----simulation---------------------------------------------------------------
-# Spread a Poisson amount of points randomly in the random square.
+if (!d) {
+  # Spread a Poisson amount of points randomly in the random square.
 total_points <- rpois(1, lambdaStar)
 random_points <- cbind(runif(total_points), runif(total_points))
 grid_size <- 50
@@ -60,9 +63,12 @@ n_po <- sum(po_sightings)
 po_points <- occurrences_points[po_sightings, ]
 po_Z <- occurrences_Z[po_sightings]
 po_W <- W1[po_sightings]
+} else warning("Data failed to download from drive. Please check internet connection and try again.")
+
 
 ## ----plot_observer_bias, fig.width = 5, fig.height = 3.5, fig.align = 'center'----
-ggplot(
+if (!d) {
+  ggplot(
   data.frame(x = reg_grid[, 1], y = reg_grid[, 2], Covariate = W2),
   aes(x, y)
 ) +
@@ -75,39 +81,54 @@ ggplot(
                                y = occurrences_points[!po_sightings, 2]),
              size = 1, shape = 1, color = "white") +
   scale_shape_manual(values = c(1, 19), labels = c("Not observed", "Observed"))
+} else warning("Data failed to download from drive. Please check internet connection and try again.")
 
 ## ----prior--------------------------------------------------------------------
-jointPrior <- prior(
+if (!d) {
+  jointPrior <- prior(
   NormalPrior(rep(0, 2), 10 * diag(2)), # Beta
   NormalPrior(rep(0, 2), 10 * diag(2)), # Delta
   GammaPrior(0.00001, 0.00001) # LambdaStar
 )
+} else warning("Data failed to download from drive. Please check internet connection and try again.")
 
 ## ----create_model-------------------------------------------------------------
-model <- bayesPO_model(po = cbind(po_Z, po_W),
+if (!d) {
+  model <- bayesPO_model(po = cbind(po_Z, po_W),
                        intensitySelection = 1, observabilitySelection = 2,
                        intensityLink = "logit", observabilityLink = "logit",
                        initial_values = 2, joint_prior = jointPrior)
+} else warning("Data failed to download from drive. Please check internet connection and try again.")
 
 ## ----fit----------------------------------------------------------------------
-bkg <- cbind(Z2, W2) # Create background
+if (!d) {
+  bkg <- cbind(Z2, W2) # Create background
+} else warning("Data failed to download from drive. Please check internet connection and try again.")
 
 #### Next is commented to save time. Uncomment to replicate results
 # fit <- fit_bayesPO(model, bkg, area = 1, mcmc_setup = list(burnin = 1000, iter = 2000))
 
 ## ----print_fit----------------------------------------------------------------
-summary(fit)
+if (!d) {
+  summary(fit)
+} else warning("Data failed to download from drive. Please check internet connection and try again.")
 
 ## ----fit2---------------------------------------------------------------------
 #### Next is commented to save time. Uncomment to replicate results
 # fit2 <- fit_bayesPO(fit, bkg, mcmc_setup = list(iter = 10000))
 
 ## ----print_fit2---------------------------------------------------------------
-summary(fit2)
+if (!d) {
+  summary(fit2)
+} else warning("Data failed to download from drive. Please check internet connection and try again.")
 
 ## ----bayesplot, fig.width = 5, fig.width = 5, fig.align = 'center'------------
-mcmc_trace(fit2)
+if (!d) {
+  mcmc_trace(fit2)
+} else warning("Data failed to download from drive. Please check internet connection and try again.")
 
 ## ----marginals, fig.width = 5, fig.width = 5, fig.align = 'center'------------
-mcmc_dens(fit2)
+if (!d) {
+  mcmc_dens(fit2)
+} else warning("Data failed to download from drive. Please check internet connection and try again.")
 
